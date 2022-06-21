@@ -8,6 +8,7 @@
     "generate:client": "rm -rf ./client && openapi-generator-cli generate -g typescript-axios -o ./client -c resources/openapi-client-config.json -i ./openapi.yaml",
     "generate:routes-index": "yarn ts-node src/utils/generate-routes-index",
     "test": "NODE_ENV=test jest",
+    "test-win": "set NODE_ENV=test && jest",
     "lint": "eslint . --ext ts,js --cache",
     "lint:fix": "yarn lint --fix"
   },

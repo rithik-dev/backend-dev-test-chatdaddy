@@ -15,7 +15,7 @@ export const describeWithApp = (
 
 	afterAll(async() => {
 		const db = await getConnection()
-		await db.disconnect()
+		await db.destroy()
 	})
 
 	tests(app)
