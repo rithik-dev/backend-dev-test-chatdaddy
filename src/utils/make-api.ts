@@ -5,6 +5,7 @@ import OpenAPIBackend, { Handler as APIHandler } from 'openapi-backend'
 import { Logger } from 'pino'
 import { operations } from '../types/gen'
 import { AuthUser } from './auth-controller'
+import getConnection, { AppDataSource } from './get-connection'
 import MAIN_LOGGER from './logger'
 
 const DEFAULT_AUTH_SCHEME = 'token'
@@ -45,15 +46,17 @@ export type Authentication = { [DEFAULT_AUTH_SCHEME]: AuthUser }
 // the JSON request body of a given operation
 export type requestBody<O extends Operation> = FullOp<O>['requestBody']['content']['application/json']
 // full request type of an operation -- query + parameters + requestBody
-export type FullRequest<O extends Operation> =
-	FullOp<O>['parameters']['query'] &
-	FullOp<O>['parameters']['path'] &
-	requestBody<O>
+export type FullRequest<O extends Operation> = {
+	query: FullOp<O>['parameters']['query'],
+	path: FullOp<O>['parameters']['path'],
+	body: requestBody<O>,
+}
 // the response type of an operation
 export type Response<O extends Operation> = FullOp<O>['responses']['200']['content']['application/json']
 // handle cleaned up request (type checks response too)
 export type Handler<O extends Operation> = (
 	ev: FullRequest<O>,
+	conn: { db: typeof AppDataSource.manager },
 	auth: Authentication,
 	logger: Logger
 ) => Promise<Response<O>>
@@ -92,10 +95,10 @@ function errorHandlingWrap<O extends Operation>(getHandler: GetHandler<O>): APIH
 		})
 
 		const fullRequest = { // combine all params
-			...query,
-			...(e.request.requestBody || {}),
-			...(e.request.params || {})
-		}
+			query,
+			body: e.request.requestBody || {},
+			path: e.request.params || {}
+		} as FullRequest<O>
 
 		let auth: Authentication | undefined = undefined
 		let trace: string | undefined = undefined
@@ -119,7 +122,12 @@ function errorHandlingWrap<O extends Operation>(getHandler: GetHandler<O>): APIH
 				// retreive the request handler
 				const handler = await getHandler()
 				// execute the request handler
-				result.body = await handler(fullRequest, auth, logger)
+				result.body = await handler(
+					fullRequest,
+					{ db: (await getConnection()).manager },
+					auth,
+					logger
+				)
 			}
 
 			result.statusCode = 200
@@ -180,44 +188,6 @@ export default async(definition: string, routes: { [O in Operation]: GetHandler<
 		customizeAjv: ajv => addFormats(ajv),
 		quick: process.env.NODE_ENV === 'production',
 	})
-
-	// uncomment for when we've auth
-	// api.registerSecurityHandler(DEFAULT_AUTH_SCHEME, async e => {
-	// 	try {
-	// 		const headers = e.request.headers
-	// 		const [security] = e.operation.security!
-	// 		const scopes = security[DEFAULT_AUTH_SCHEME]
-	//
-	// 		// remove "Bearer " prefix
-	// 		const token = (headers.Authorization || headers.authorization)?.slice(7)
-	// 		if(!token || typeof token !== 'string') {
-	// 			throw new Boom('Missing auth token', { statusCode: 401 })
-	// 		}
-	//
-	// 		const authUser = await authenticate(token)
-	//
-	// 		if(typeof authUser === 'boolean') {
-	// 			throw new Boom('Token expired', { statusCode: 401 })
-	// 		}
-	//
-	// 		if(!userCanAccess(authUser, scopes)) {
-	// 			// noinspection ExceptionCaughtLocallyJS
-	// 			throw new Boom('Insufficient Access', { statusCode: 403 })
-	// 		}
-	//
-	// 		return authUser
-	// 	} catch(error) {
-	// 		if(error instanceof Boom) {
-	// 			throw error
-	// 		} else if(error instanceof TypeError) {
-	// 			const boom = new Boom('Whoops, something went seriously wrong.')
-	// 			boom.stack = error.stack // so we can log & trace this later
-	// 			throw boom
-	// 		} else {
-	// 			throw new Boom(error.message, { statusCode: error.code || 401 })
-	// 		}
-	// 	}
-	// })
 
 	const routeList = Object.keys(routes) as (keyof typeof routes)[]
 

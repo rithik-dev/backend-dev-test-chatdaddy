@@ -5,6 +5,8 @@ import { APIGatewayProxyEvent, Context } from 'aws-lambda'
 import ROUTES from '../routes'
 import makeApi from '../utils/make-api'
 
+import 'reflect-metadata'
+
 export const api = makeApi('openapi.yaml', ROUTES)
 
 export const handler = (event: APIGatewayProxyEvent, context: Context) => {
