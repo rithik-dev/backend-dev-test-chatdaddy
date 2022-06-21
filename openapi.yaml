@@ -1,0 +1,149 @@
+openapi: 3.0.3
+
+info:
+  title: Backend Dev Test - ChatDaddy
+  version: 1.0.0
+
+paths:
+  /users:
+    get:
+      operationId: getUsers
+      summary: Returns the users
+      tags:
+        - User
+      parameters:
+        - $ref: "#/components/parameters/IdParam"
+        - $ref: "#/components/parameters/PhoneNumberParam"
+      responses:
+        200:
+          $ref: "#/components/responses/UsersResponse"
+    post:
+      operationId: createUser
+      summary: Creates a user
+      requestBody:
+        $ref: "#/components/requestBodies/CreateUserBody"
+      tags:
+        - User
+      responses:
+        200:
+          $ref: "#/components/responses/UserResponse"
+    patch:
+      operationId: updateUsers
+      summary: Updates users
+      requestBody:
+        $ref: "#/components/requestBodies/UpdateUserBody"
+      tags:
+        - User
+      parameters:
+        - $ref: "#/components/parameters/IdParam"
+        - $ref: "#/components/parameters/PhoneNumberParam"
+      responses:
+        200:
+          $ref: "#/components/responses/UsersAffected"
+    delete:
+      operationId: deleteUsers
+      summary: Deletes users
+      tags:
+        - User
+      parameters:
+        - $ref: "#/components/parameters/IdParam"
+        - $ref: "#/components/parameters/PhoneNumberParam"
+      responses:
+        200:
+          $ref: "#/components/responses/UsersAffected"
+
+components:
+  schemas:
+    User:
+      type: object
+      required:
+        - id
+        - name
+        - phoneNumber
+        - age
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        phoneNumber:
+          type: string
+        age:
+          type: integer
+    CreateUserBody:
+      type: object
+      required:
+        - name
+        - phoneNumber
+        - age
+      properties:
+        name:
+          type: string
+        phoneNumber:
+          type: string
+        age:
+          type: integer
+          # just coz -ve not allowed
+          minimum: 0
+    UpdateUserBody:
+      type: object
+      properties:
+        name:
+          type: string
+        phoneNumber:
+          type: string
+        age:
+          type: integer
+          # just coz -ve not allowed
+          minimum: 0
+
+  requestBodies:
+    CreateUserBody:
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/CreateUserBody"
+    UpdateUserBody:
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/UpdateUserBody"
+
+  responses:
+    UsersAffected:
+      description: Created
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - usersAffected
+            properties:
+              usersAffected:
+                type: integer
+    UserResponse:
+      description: "Returns the user"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/User"
+    UsersResponse:
+      description: "Returns the list of users"
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: "#/components/schemas/User"
+
+  parameters:
+    IdParam:
+      in: query
+      name: id
+      schema:
+        type: string
+    PhoneNumberParam:
+      in: query
+      name: phoneNumber
+      schema:
+        type: string
