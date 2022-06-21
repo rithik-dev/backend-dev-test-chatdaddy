@@ -1,14 +1,20 @@
+import { User } from '../entity'
 import { Handler } from '../utils/make-api'
 
 const createUser: Handler<'createUser'> = async(
-	{ phoneNumber, name, age }
+	{ body: { age, phoneNumber, name } },
+	{ db },
 ) => {
-	return {
-		id: '1',
-		name,
-		age,
-		phoneNumber,
-	}
+	const userRepo = await db.getRepository(User)
+
+	const user = new User()
+
+	user.name = name
+	user.phoneNumber = phoneNumber
+	user.age = age
+
+
+	return await userRepo.save(user)
 }
 
 export default createUser
