@@ -9,21 +9,25 @@
     "strictNullChecks": true,
     "noImplicitThis": true,
     "esModuleInterop": true,
+    "strictPropertyInitialization": false,
     "forceConsistentCasingInFileNames": true,
     "declaration": false,
     "resolveJsonModule": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "skipLibCheck": true,
-    "lib": [ "ES2020", "DOM" ],
+    "lib": [
+      "ES2020",
+      "DOM"
+    ],
     "useUnknownInCatchVariables": false
   },
   "include": [
-    "src/*.ts", 
+    "src/*.ts",
     "src/*/*.ts"
   ],
   "exclude": [
-    "node_modules", 
+    "node_modules",
     "src/tests"
   ]
 }
