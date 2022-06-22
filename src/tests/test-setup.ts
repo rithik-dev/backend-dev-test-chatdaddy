@@ -2,14 +2,12 @@
 import '../utils/env'
 
 import { Application } from 'express'
-import getConnection from '../utils/get-connection'
 import makeTestServer from './make-test-server'
+import getConnection from '../utils/get-connection'
 
 export const describeWithApp = (
 	name: string,
-	tests: (
-        app: Application
-    ) => void,
+	tests: (app: Application) => void,
 ) => describe(name, () => {
 	const app = makeTestServer()
 
