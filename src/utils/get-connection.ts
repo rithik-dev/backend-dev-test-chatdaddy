@@ -1,5 +1,6 @@
 import { DataSource } from 'typeorm'
 import entities from '../entity'
+import migrations from '../migrations/migrations'
 
 
 export const AppDataSource = new DataSource({
@@ -10,9 +11,9 @@ export const AppDataSource = new DataSource({
 	password: process.env.PG_PASSWORD,
 	database: process.env.DBNAME,
 	entities: entities,
-	synchronize: true,
+	migrations: migrations,
+	synchronize: false,
 	logging: false,
-	migrations: [],
 })
 
 let dataSource: DataSource
@@ -20,6 +21,7 @@ let dataSource: DataSource
 const conn = async() => {
 	if(dataSource === undefined || !dataSource.isInitialized) {
 		dataSource = await AppDataSource.initialize()
+		await dataSource.runMigrations()
 	}
 
 	return dataSource
